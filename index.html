@@ -1,0 +1,34 @@
+<html>
+  <head>
+    <title>
+      Antibody sequence bulk annotation
+    </title>
+  </head>
+
+  <body>
+    <h1>Antibody sequence bulk annotation</h1>
+
+    <form method='post' action='./abyannotate.cgi'>
+      <p>Enter your sequence data in FASTA format...</p>
+      <textarea cols='80' rows='20' name='sequences'></textarea>
+      
+      <p>CDR definition...</p>
+      <p>
+        <input type='radio' name='cdrdef' value='kabat'
+               checked='checked' />Kabat
+        &nbsp;&nbsp;&nbsp;
+        <input type='radio' name='cdrdef' value='chothia'
+               />Chothia
+        &nbsp;&nbsp;&nbsp;
+        <input type='radio' name='cdrdef' value='combined'
+               />Combined
+        &nbsp;&nbsp;&nbsp;
+      </p>
+      <p>
+        <input type='submit' />
+      </p>
+    </form>
+    
+  </body>
+</html>
+
