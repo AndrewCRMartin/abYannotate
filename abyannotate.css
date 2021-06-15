@@ -1,0 +1,52 @@
+    h1 {font: bold 22pt Helvetica,Arial,sans-serif;
+       }
+    h2 {font: bold 14pt Helvetica,Arial,sans-serif;
+        padding: 0pt; margin: 2em 0 0 0;
+       }
+    .sequence {font: bold 11pt Courier,monospaced;
+               padding: 0pt; margin: 0pt;
+              }
+    .aa {margin: 0; padding: 4pt 2pt 1pt 2pt;}
+    .label {margin: 0; padding: 0pt 2pt 0pt 2pt;}
+      /* Residue colour schemes */
+    .fwA {background-color: #ffffff; color: #80a0f0;}
+    .fwR {background-color: #ffffff; color: #f01505;}
+    .fwN {background-color: #ffffff; color: #00ff00;}
+    .fwD {background-color: #ffffff; color: #c048c0;}
+    .fwC {background-color: #ffffff; color: #f08080;}
+    .fwQ {background-color: #ffffff; color: #00ff00;}
+    .fwE {background-color: #ffffff; color: #c048c0;}
+    .fwG {background-color: #ffffff; color: #f09048;}
+    .fwH {background-color: #ffffff; color: #15a4a4;}
+    .fwI {background-color: #ffffff; color: #80a0f0;}
+    .fwL {background-color: #ffffff; color: #80a0f0;}
+    .fwK {background-color: #ffffff; color: #f01505;}
+    .fwM {background-color: #ffffff; color: #80a0f0;}
+    .fwF {background-color: #ffffff; color: #80a0f0;}
+    .fwP {background-color: #ffffff; color: #ffff00;}
+    .fwS {background-color: #ffffff; color: #00ff00;}
+    .fwT {background-color: #ffffff; color: #00ff00;}
+    .fwW {background-color: #ffffff; color: #80a0f0;}
+    .fwY {background-color: #ffffff; color: #15a4a4;}
+    .fwV {background-color: #ffffff; color: #80a0f0;}
+
+    .cdrA {background-color: #80a0f0; color: #000000;}
+    .cdrR {background-color: #f01505; color: #000000;}
+    .cdrN {background-color: #00ff00; color: #000000;}
+    .cdrD {background-color: #c048c0; color: #000000;}
+    .cdrC {background-color: #f08080; color: #000000;}
+    .cdrQ {background-color: #00ff00; color: #000000;}
+    .cdrE {background-color: #c048c0; color: #000000;}
+    .cdrG {background-color: #f09048; color: #000000;}
+    .cdrH {background-color: #15a4a4; color: #000000;}
+    .cdrI {background-color: #80a0f0; color: #000000;}
+    .cdrL {background-color: #80a0f0; color: #000000;}
+    .cdrK {background-color: #f01505; color: #000000;}
+    .cdrM {background-color: #80a0f0; color: #000000;}
+    .cdrF {background-color: #80a0f0; color: #000000;}
+    .cdrP {background-color: #ffff00; color: #000000;}
+    .cdrS {background-color: #00ff00; color: #000000;}
+    .cdrT {background-color: #00ff00; color: #000000;}
+    .cdrW {background-color: #80a0f0; color: #000000;}
+    .cdrY {background-color: #15a4a4; color: #000000;}
+    .cdrV {background-color: #80a0f0; color: #000000;}
