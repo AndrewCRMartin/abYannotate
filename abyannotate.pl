@@ -1,11 +1,29 @@
 #!/usr/bin/perl -s
 
 use strict;
-use lib '.';
-use lib './lib';
-use fasta;
 
-$::abnum='abnum' unless(defined($::abnum));
+# Add the path of the executable to the library path
+use FindBin;
+use lib $FindBin::Bin;
+# and the lib subdirectory
+use Cwd qw(abs_path);
+use lib abs_path("$FindBin::Bin/lib");
+
+use fasta;
+use config;
+
+my $configFile = "$FindBin::Bin" . "/config.cfg";
+
+my %config = config::ReadConfig($configFile);
+
+$::abnum=$config{'abnum'} unless(defined($::abnum));
+
+if(! -x $::abnum)
+{
+    print "Abnum executable not found: $::abnum\n";
+    exit 1;
+}
+
 $::abnum .= ' -f';
 $::cdr='kabat' unless(defined($::cdr));
 
@@ -106,7 +124,7 @@ sub Annotate
         {
             if($resnum eq $::cdrdef{$cdr}{"$chain$i"}{'start'})
             {
-                $result .= '|';
+                $result .= '{';
                 last;
             }
         }
@@ -117,7 +135,7 @@ sub Annotate
         {
             if($resnum eq $::cdrdef{$cdr}{"$chain$i"}{'stop'})
             {
-                $result .= '|';
+                $result .= '}';
                 last;
             }
         }

@@ -6,6 +6,11 @@ if [ "X$1" == "X" ]; then
 fi
 dest=$1
 
+if [ ! -f config.cfg ]; then
+    echo "You must create a config file before installation"
+    exit 1;
+fi
+
 mkdir -p $dest
 
 if [ ! -d $dest ]; then
@@ -13,9 +18,9 @@ if [ ! -d $dest ]; then
     exit 1;
 fi
 
-cp *.pl *.cgi *.html $dest
+cp *.pl *.cgi *.html *.cfg $dest
 cp htaccess $dest/.htaccess
-chmod a+x $dest/*.pl $dest/*.cgi
+chmod a+rx $dest/*.pl $dest/*.cgi
 
 mkdir -p $dest/lib
 cp lib/* $dest/lib

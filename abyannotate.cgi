@@ -3,7 +3,24 @@
 use strict;
 use CGI;
 
-$::abnum="../../abs/bin/abnum";
+# Add the path of the executable/lib to the library path
+use FindBin;
+use Cwd qw(abs_path);
+use lib abs_path("$FindBin::Bin/lib");
+
+use config;
+
+my $configFile = "$FindBin::Bin" . "/config.cfg";
+
+my %config = config::ReadConfig($configFile);
+
+$::abnum=$config{'abnum'} unless(defined($::abnum));
+
+if(! -x $::abnum)
+{
+    print "Abnum executable not found: $::abnum\n";
+    exit 1;
+}
 
 my $cgi = new CGI;
 
