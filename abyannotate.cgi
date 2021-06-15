@@ -18,23 +18,28 @@ my %config = config::ReadConfig($configFile);
 
 $::abnum=$config{'abnum'} unless(defined($::abnum));
 
+my $cgi = new CGI;
+print $cgi->header();
 if(! -x $::abnum)
 {
-    print "Abnum executable not found: $::abnum\n";
+    PrintHTML("# Abnum executable not found: $::abnum", 0);
     exit 1;
 }
-
-my $cgi = new CGI;
+if(! -x "./abyannotate.pl")
+{
+    PrintHTML("# abyannotate Perl script executable not found!", 0);
+    exit 1;
+}
 
 my $sequences = $cgi->param('sequences');
 my $cdrdef    = $cgi->param('cdrdef');
 my $labelcdrs = defined($cgi->param('labelcdrs'))?'-label':'';
 my $html      = ($cgi->param('outstyle') eq 'html')?'-html':'';
 
-my $uploadDir = "/tmp/abyannotate_" . $$ . time();
+my $uploadDir = "/home/public/abyannotate_" . $$ . time();
 my $filename  = $cgi->param('fastafile');
 
-if($filename != '')
+if($filename ne '')
 {
     $CGI::POST_MAX = 1024 * 5000;
     my $safeFilenameCharacters = "a-zA-Z0-9_.-";
@@ -73,6 +78,11 @@ if($filename != '')
         close($fp);
     }
 }
+elsif($sequences eq '')
+{
+    PrintHTML('# You must specify some sequences or a FASTA file', 0);
+    exit 0;
+}
 
 
 my $fastaFile = WriteFastaFile($sequences);
@@ -81,10 +91,15 @@ if($fastaFile ne '')
 {
     my $exe = "./abyannotate.pl $html $labelcdrs -cdr=$cdrdef -abnum=$::abnum $fastaFile";
     $result = `$exe`;
+    unlink $fastaFile;
+}
+else
+{
+    PrintHTML('# Unable to create temp file', 0);
+    exit 0;
 }
 
 
-print $cgi->header();
 my $wrapInPre = ($html eq '-html')?0:1;
 PrintHTML($result, $wrapInPre);
 
