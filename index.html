@@ -3,6 +3,7 @@
     <title>
       Antibody sequence bulk annotation
     </title>
+    <link rel='stylesheet' href='abyannotate.css' />
   </head>
 
   <body>
@@ -23,6 +24,19 @@
         <input type='radio' name='cdrdef' value='combined'
                />Combined
         &nbsp;&nbsp;&nbsp;
+      </p>
+
+      <p>Output style...</p>
+      <p>
+        <input type='radio' name='outstyle' value='html'
+               checked='checked' />Pretty
+        &nbsp;&nbsp;&nbsp;
+        <input type='radio' name='outstyle' value='plain'
+               />Plain
+        <br />
+        <input type='checkbox' name='labelcdrs' value='1'
+               />Label CDRs
+
       </p>
       <p>
         <input type='submit' />

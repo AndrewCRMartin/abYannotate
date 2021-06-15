@@ -84,10 +84,27 @@ if(open(my $in, '<', $fastaFile))
 
             my $exe = "$::abnum $tFile";
             my $result = `$exe`;
+            my $labels = '';
 
-            print "$info\n";
-            $result = Annotate($result, $::cdr);
-            print "$result\n";
+            ($result, $labels) = Annotate($result, $::cdr);
+            if(defined($::html))
+            {
+                $info = FixHTMLChars($info);
+                print "<h2>$info</h2>\n";
+                if($::label)
+                {
+                    $labels = HTMLizeLabels($labels);
+                    print "<p class='sequence'>$labels</p>\n";
+                }
+                $result = HTMLizeSequence($result);
+                print "<p class='sequence'>$result</p>\n";
+            }
+            else
+            {
+                print "$info\n";
+                print "$labels\n" if(defined($::label));
+                print "$result\n";
+            }
         }
     }
     close($in);
@@ -97,25 +114,29 @@ if(open(my $in, '<', $fastaFile))
 
 sub Annotate
 {
-    my($result, $cdr) = @_;
-    $result =~ s/^\s+//;  # Remove leading spaces;
+    my($input, $cdr) = @_;
+    $input =~ s/^\s+//;  # Remove leading spaces;
     
     # Error message
-    if($result =~ /^#/)
+    if($input =~ /^#/)
     {
-        chomp $result;
-        return($result);
+        chomp $input;
+        return($input);
     }
-    # Blank result
-    if(!length($result))
+    # Blank input
+    if(!length($input))
     {
         return('# no result from numbering');
     }
     
-    my $chain = substr($result, 0, 1);
-    my @lines = split(/\n/, $result);
+    my $chain = substr($input, 0, 1);
+    my @lines = split(/\n/, $input);
     my $inCDR = 0;
-    $result = '';
+
+    my $output = '';
+    my $labels = '';
+    my $skipcount = 0;
+    my $inCDR     = 0;
     foreach my $line (@lines)
     {
         chomp $line;
@@ -124,21 +145,107 @@ sub Annotate
         {
             if($resnum eq $::cdrdef{$cdr}{"$chain$i"}{'start'})
             {
-                $result .= '{';
+                $output   .= '{';
+                $labels   .= "{$chain$i";
+                $skipcount = 2;
+                $inCDR     = 1;
                 last;
             }
         }
 
-        $result .= $aa;
+        $output .= $aa;
+        if($skipcount-- <= 0)
+        {
+            if($inCDR)
+            {
+                $labels .= '-';
+            }
+            else
+            {
+                $labels .= ' ';
+            }
+        }
 
         for(my $i=1; $i<=3; $i++)
         {
             if($resnum eq $::cdrdef{$cdr}{"$chain$i"}{'stop'})
             {
-                $result .= '}';
+                $output .= '}';
+                $labels .= '}';
+                $inCDR   = 0;
                 last;
             }
         }
     }
-    return($result);
+    return($output, $labels);
+}
+
+sub HTMLizeSequence
+{
+    my($input) = @_;
+    my $output = '';
+    my $inCDR  = 0;
+    
+    my @chars = split(//, $input);
+    foreach my $char (@chars)
+    {
+        if($char eq '{')
+        {
+            $inCDR   = 1;
+        }
+        elsif($char eq '}')
+        {
+            $inCDR   = 0;
+        }
+        else
+        {
+            if($inCDR)
+            {
+                $output .= "<span class='aa cdr$char'>$char</span>";
+            }
+            else
+            {
+                $output .= "<span class='aa fw$char'>$char</span>";
+            }
+        }
+    }
+    return($output);
+}
+
+sub HTMLizeLabels
+{
+    my($input) = @_;
+    my $output = '';
+    my $inCDR  = 0;
+    
+    my @chars = split(//, $input);
+    foreach my $char (@chars)
+    {
+        if($char eq '{')
+        {
+            $inCDR   = 1;
+        }
+        elsif($char eq '}')
+        {
+            $inCDR   = 0;
+        }
+        elsif($char eq ' ')
+        {
+            $output .= "<span class='label'>&nbsp;</span>";
+        }
+        else
+        {
+            $output .= "<span class='label'>$char</span>";
+        }
+    }
+    return($output);
+}
+
+sub FixHTMLChars
+{
+    my($input) = @_;
+    $input =~ s/\&/\&amp;/;
+    $input =~ s/\>/\&gt;/;
+    $input =~ s/\</\&lt;/;
+    return($input);
 }

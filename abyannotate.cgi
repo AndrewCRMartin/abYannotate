@@ -26,34 +26,28 @@ my $cgi = new CGI;
 
 my $sequences = $cgi->param('sequences');
 my $cdrdef    = $cgi->param('cdrdef');
+my $labelcdrs = defined($cgi->param('labelcdrs'))?'-label':'';
+my $html      = ($cgi->param('outstyle') eq 'html')?'-html':'';
+
 
 my $fastaFile = WriteFastaFile($sequences);
 my $result    = '';
 if($fastaFile ne '')
 {
-    my $exe = "./abyannotate.pl -cdr=$cdrdef -abnum=$::abnum $fastaFile";
+    my $exe = "./abyannotate.pl $html $labelcdrs -cdr=$cdrdef -abnum=$::abnum $fastaFile";
     $result = `$exe`;
 }
 
 
 print $cgi->header();
-PrintHTML($result);
+my $wrapInPre = ($html eq '-html')?0:1;
+PrintHTML($result, $wrapInPre);
 
 sub PrintHTML
 {
-    my($result) = @_;
+    my($result, $wrapInPre) = @_;
 
-    print <<__EOF;
-<html>
-  <head>
-    <title>
-      Antibody sequence bulk annotation
-    </title>
-  </head>
-
-  <body>
-    <h1>Antibody sequence bulk annotation</h1>
-__EOF
+    PrintHTMLHeader();
 
     if($result eq '')
     {
@@ -61,14 +55,38 @@ __EOF
     }
     else
     {
-        print "<pre>\n";
-        print $result;
-        print "</pre>\n";
+        if($wrapInPre)
+        {
+            print "<pre>\n";
+            print $result;
+            print "</pre>\n";
+        }
+        else
+        {
+            print $result;
+        }
     }
 
     print <<__EOF;
   </body>
 </html>
+__EOF
+}
+
+
+sub PrintHTMLHeader
+{
+    print <<__EOF;
+<html>
+  <head>
+    <title>
+      Antibody sequence bulk annotation
+    </title>
+    <link rel='stylesheet' href='abyannotate.css' />
+  </head>
+
+  <body>
+    <h1>Antibody sequence bulk annotation</h1>
 __EOF
 }
 
