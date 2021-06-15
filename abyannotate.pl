@@ -185,6 +185,8 @@ sub HTMLizeSequence
     my($input) = @_;
     my $output = '';
     my $inCDR  = 0;
+
+    return($input) if($input =~ /^#/);
     
     my @chars = split(//, $input);
     foreach my $char (@chars)

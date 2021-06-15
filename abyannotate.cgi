@@ -7,6 +7,8 @@ use CGI;
 use FindBin;
 use Cwd qw(abs_path);
 use lib abs_path("$FindBin::Bin/lib");
+use CGI::Carp qw ( fatalsToBrowser );
+
 
 use config;
 
@@ -28,6 +30,49 @@ my $sequences = $cgi->param('sequences');
 my $cdrdef    = $cgi->param('cdrdef');
 my $labelcdrs = defined($cgi->param('labelcdrs'))?'-label':'';
 my $html      = ($cgi->param('outstyle') eq 'html')?'-html':'';
+
+my $uploadDir = "/tmp/abyannotate_" . $$ . time();
+my $filename  = $cgi->param('fastafile');
+
+if($filename != '')
+{
+    $CGI::POST_MAX = 1024 * 5000;
+    my $safeFilenameCharacters = "a-zA-Z0-9_.-";
+    $filename =~ s/.*\///;
+    $filename =~ tr/ /_/;
+    $filename =~ s/[^$safeFilenameCharacters]//g;
+    if ( $filename =~ /^([$safeFilenameCharacters]+)$/ )
+    {
+        $filename = $1;
+    }
+    else
+    {
+        $filename = 'upload.faa';
+    }
+    
+    `mkdir $uploadDir`;
+    my $fhIn = $cgi->upload('fastafile');
+    my $fullFilename = "$uploadDir/$filename";
+    if(open(UPLOADFILE, '>', $fullFilename))
+    {
+        binmode UPLOADFILE;
+        while (<$fhIn>) 
+        { 
+            print UPLOADFILE;
+        } 
+        close UPLOADFILE;
+    }
+
+    $sequences = '';
+    if(open(my $fp, '<', $fullFilename))
+    {
+        while(<$fp>)
+        {
+            $sequences .= $_;
+        }
+        close($fp);
+    }
+}
 
 
 my $fastaFile = WriteFastaFile($sequences);

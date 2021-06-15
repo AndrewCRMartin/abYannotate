@@ -9,9 +9,13 @@
   <body>
     <h1>Antibody sequence bulk annotation</h1>
 
-    <form method='post' action='./abyannotate.cgi'>
+    <form method='post' action='./abyannotate.cgi' enctype='multipart/form-data'>
       <p>Enter your sequence data in FASTA format...</p>
       <textarea cols='80' rows='20' name='sequences'></textarea>
+
+      <p>...or upload a FASTA format file...</p>
+      <input type='file' name='fastafile' />
+
       
       <p>CDR definition...</p>
       <p>
