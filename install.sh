@@ -18,7 +18,7 @@ if [ ! -d $dest ]; then
     exit 1;
 fi
 
-cp *.pl *.cgi *.html *.css *.cfg $dest
+cp *.pl *.cgi *.html *.css *.cfg *.gif $dest
 cp htaccess $dest/.htaccess
 chmod a+rx $dest/*.pl $dest/*.cgi
 

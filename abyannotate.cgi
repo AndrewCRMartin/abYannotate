@@ -2,7 +2,6 @@
 
 # For WS access a newline in a FASTA format file may be replaced by a ~
 
-
 use strict;
 use CGI;
 
@@ -29,7 +28,7 @@ my $pretty    = shift @ARGV;
 my $plain     = shift @ARGV;
 my $sequences = shift @ARGV;
 
-if(1)
+if(0)
 {
     if(open(my $fp, '>>', '/var/www/html/tmp/errors.log'))
     {

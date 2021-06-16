@@ -93,7 +93,7 @@ sub RunSlowProgram
 {
     my ($htmlPage, $htmlView, $textPage, $cdrdef, $labelcdrs, $pretty, $plain, $sequences) = @_;
 
-    if(1)
+    if(0)
     {
         if(open(my $fp, '>>', '/var/www/html/tmp/errors.log'))
         {

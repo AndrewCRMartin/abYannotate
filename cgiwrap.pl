@@ -2,6 +2,18 @@
 use strict;
 use CGI;
 
+# Add the path of the executable/lib to the library path
+use FindBin;
+use Cwd qw(abs_path);
+use lib abs_path("$FindBin::Bin/lib");
+use CGI::Carp qw ( fatalsToBrowser );
+
+# Read the config file
+use config;
+my $configFile = "$FindBin::Bin" . "/config.cfg";
+my %config = config::ReadConfig($configFile);
+$::htmllocation=$config{'htmllocation'};
+
 my $htmlPage  = shift @ARGV;
 my $htmlView  = shift @ARGV;
 my $textPage  = shift @ARGV;
@@ -12,7 +24,7 @@ my $plain     = shift @ARGV;
 my $sequences = shift @ARGV;
 
 
-if(1)
+if(0)
 {
     if(open(my $fp, '>>', '/var/www/html/tmp/errors.log'))
     {
@@ -57,9 +69,9 @@ sub PrintUpdatingHTMLPage
   </head>
   <body>
     <h1>abYannotate</h1>
-    <h2>Waiting for calculations to complete...</h2>
-    <p>If this page does not refresh after 10 seconds, press 
-      <a href='$htmlView'>here</a>
+    <h2>Waiting for calculations to complete... <img src='$::htmllocation/throbber.gif' /></h2>
+    <p>This page will refresh every 10 seconds. Press 
+      <a href='$htmlView'>here</a> to force a refresh.
     </p>
   </body>
 </html>
