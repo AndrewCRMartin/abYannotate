@@ -36,7 +36,7 @@ if(! -x "./abyannotate.pl")
 # Obtain parameters from web site
 my $cdrdef    = $cgi->param('cdrdef');
 my $labelcdrs = defined($cgi->param('labelcdrs'))?'-label':'';
-my $html      = ($cgi->param('outstyle') eq 'html')?'-html':'';
+my $pretty    = ($cgi->param('outstyle') eq 'pretty')?1:0;
 
 
 # Obtain the sequence data
@@ -67,8 +67,15 @@ my $result    = `cat $rawFile`;
 # Remove the temporary FASTA file
 unlink $fastaFile;
 
-
-my $wrapInPre = ($html eq '-html')?0:1;
+my $wrapInPre = 0;
+if($pretty)
+{
+    $result = ConvertToHTML($result);
+}
+else
+{
+    $wrapInPre = 1;
+}
 PrintHTML($result, $wrapInPre);
 
 sub PrintHTML
@@ -182,4 +189,106 @@ sub GetFileOrPastedSequences
     }
 
     return($sequences);
+}
+
+
+sub ConvertToHTML
+{
+    my($result) = @_;
+
+    my $html = '';
+    my @data = split(/\n/, $result);
+
+    foreach $_ (@data)
+    {
+        if(/^>/)
+        {
+            $_ = FixHTMLChars($_);
+            $html .= "<h2>$_</h2>\n";
+
+        }
+        elsif(/H1/ || /H2/ || /H3/ || /L1/ || /L2/ || /L3/)
+        {
+            my $labels = HTMLizeLabels($_);
+            $html .= "<p class='sequence'>$labels</p>\n";
+        }
+        else
+        {
+            my $annotation = HTMLizeSequence($_);
+            $html .= "<p class='sequence'>$annotation</p>\n";
+        }
+    }
+    return($html);
+}
+
+sub HTMLizeSequence
+{
+    my($input) = @_;
+    my $output = '';
+    my $inCDR  = 0;
+
+    return($input) if($input =~ /^#/);
+    
+    my @chars = split(//, $input);
+    foreach my $char (@chars)
+    {
+        if($char eq '{')
+        {
+            $inCDR   = 1;
+        }
+        elsif($char eq '}')
+        {
+            $inCDR   = 0;
+        }
+        else
+        {
+            if($inCDR)
+            {
+                $output .= "<span class='aa cdr$char'>$char</span>";
+            }
+            else
+            {
+                $output .= "<span class='aa fw$char'>$char</span>";
+            }
+        }
+    }
+    return($output);
+}
+
+sub HTMLizeLabels
+{
+    my($input) = @_;
+    my $output = '';
+    my $inCDR  = 0;
+    
+    my @chars = split(//, $input);
+    foreach my $char (@chars)
+    {
+        if($char eq '{')
+        {
+            $inCDR   = 1;
+        }
+        elsif($char eq '}')
+        {
+            $inCDR   = 0;
+        }
+        elsif($char eq ' ')
+        {
+            $output .= "<span class='label'>&nbsp;</span>";
+        }
+        else
+        {
+            $output .= "<span class='label'>$char</span>";
+        }
+    }
+    return($output);
+}
+
+sub FixHTMLChars
+{
+    my($input) = @_;
+    $input =~ s/\&/\&amp;/;
+    $input =~ s/\>/\&gt;/;
+    $input =~ s/\</\&lt;/;
+    return($input);
 }
