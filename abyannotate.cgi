@@ -68,8 +68,7 @@ my $exe = "./abyannotate.pl $labelcdrs -cdr=$cdrdef -abnum=$::abnum $fastaFile";
 my $result    = `cat $rawFile`;
 
 # Remove the temporary FASTA file
-print STDERR "FASTA:\n$fastaFile\n";
-#unlink $fastaFile;
+unlink $fastaFile;
 
 my $wrapInPre = 0;
 if($pretty)
