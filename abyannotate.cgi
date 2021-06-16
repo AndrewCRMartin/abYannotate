@@ -24,7 +24,7 @@ my $cdrdef    = defined($cgi->param('cdrdef'))?$cgi->param('cdrdef'):'kabat';
 my $labelcdrs = defined($cgi->param('labelcdrs'))?'-label':'';
 my $pretty    = ($cgi->param('outstyle') eq 'pretty')?1:0;
 my $plain     = defined($cgi->param('plain'));
-$pretty = 0 if($plain);
+$pretty       = 0 if($plain);
 
 # Print HTTP header
 PrintHTTPHeader($cgi, $plain);
@@ -32,12 +32,12 @@ PrintHTTPHeader($cgi, $plain);
 # Check that the executables are present
 if(! -x $::abnum)
 {
-    PrintHTML("Error: Abnum executable not found: $::abnum", $plain, 1);
+    PrintHTML("Error: Abnum executable not found: $::abnum", $plain, 1, '');
     exit 1;
 }
 if(! -x "./abyannotate.pl")
 {
-    PrintHTML("Error: abyannotate Perl script executable not found!", $plain, 1);
+    PrintHTML("Error: abyannotate Perl script executable not found!", $plain, 1, '');
     exit 1;
 }
 
@@ -48,7 +48,7 @@ my $sequences = GetFileOrPastedSequences($cgi);
 #                                         $cgi->param('fastafile'));
 if($sequences eq '')
 {
-    PrintHTML('Error: You must specify some sequences or a FASTA file', $plain, 1);
+    PrintHTML('Error: You must specify some sequences or a FASTA file', $plain, 1, '');
     exit 0;
 }
 
@@ -56,7 +56,7 @@ if($sequences eq '')
 my $fastaFile = WriteFastaFile($sequences, $plain);
 if($fastaFile eq '')
 {
-    PrintHTML('Error: Unable to create FASTA file', $plain, 1);
+    PrintHTML('Error: Unable to create FASTA file', $plain, 1, '');
     exit 0;
 }
 
@@ -80,15 +80,22 @@ elsif(!$plain)
 {
     $result = "<pre>\n${result}\n</pre>";
 }
-PrintHTML($result, $plain, 0);
+PrintHTML($result, $plain, 0, $rawFile);
 
 sub PrintHTML
 {
-    my($result, $plain, $isError) = @_;
+    my($result, $plain, $isError, $rawFile) = @_;
 
     if(!$plain)
     {
         PrintHTMLHeader();
+
+        if($rawFile ne '')
+        {
+            $rawFile =~ s/^.*\///;
+            print "<div><a class='btn' download='$rawFile' href='/tmp/$rawFile'>Download</a></div>\n";
+        }
+
         print "<div>\n";
     }
 
