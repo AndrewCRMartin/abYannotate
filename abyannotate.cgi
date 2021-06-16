@@ -31,54 +31,16 @@ if(! -x "./abyannotate.pl")
     exit 1;
 }
 
-my $sequences = $cgi->param('sequences');
 my $cdrdef    = $cgi->param('cdrdef');
 my $labelcdrs = defined($cgi->param('labelcdrs'))?'-label':'';
 my $html      = ($cgi->param('outstyle') eq 'html')?'-html':'';
 
-my $uploadDir = "/home/public/abyannotate_" . $$ . time();
-my $filename  = $cgi->param('fastafile');
+#my $uploadDir = "/home/public/abyannotate_" . $$ . time();
+my $uploadDir = "/tmp/abyannotate_" . $$ . time();
 
-if($filename ne '')
-{
-    $CGI::POST_MAX = 1024 * 5000;
-    my $safeFilenameCharacters = "a-zA-Z0-9_.-";
-    $filename =~ s/.*\///;
-    $filename =~ tr/ /_/;
-    $filename =~ s/[^$safeFilenameCharacters]//g;
-    if ( $filename =~ /^([$safeFilenameCharacters]+)$/ )
-    {
-        $filename = $1;
-    }
-    else
-    {
-        $filename = 'upload.faa';
-    }
-    
-    `mkdir $uploadDir`;
-    my $fhIn = $cgi->upload('fastafile');
-    my $fullFilename = "$uploadDir/$filename";
-    if(open(UPLOADFILE, '>', $fullFilename))
-    {
-        binmode UPLOADFILE;
-        while (<$fhIn>) 
-        { 
-            print UPLOADFILE;
-        } 
-        close UPLOADFILE;
-    }
-
-    $sequences = '';
-    if(open(my $fp, '<', $fullFilename))
-    {
-        while(<$fp>)
-        {
-            $sequences .= $_;
-        }
-        close($fp);
-    }
-}
-elsif($sequences eq '')
+my $sequences = GetFileOrPastedSequences($cgi->param('sequences'),
+                                         $cgi->param('fastafile'));
+if($sequences eq '')
 {
     PrintHTML('# You must specify some sequences or a FASTA file', 0);
     exit 0;
@@ -162,4 +124,52 @@ sub WriteFastaFile
         return($tFile);
     }
     return('');
+}
+
+sub GetFileOrPastedSequences
+{
+    my($sequences, $filename) = @_;
+    
+    if($filename ne '')
+    {
+        $CGI::POST_MAX = 1024 * 5000;
+        my $safeFilenameCharacters = "a-zA-Z0-9_.-";
+        $filename =~ s/.*\///;
+        $filename =~ tr/ /_/;
+        $filename =~ s/[^$safeFilenameCharacters]//g;
+        if ( $filename =~ /^([$safeFilenameCharacters]+)$/ )
+        {
+            $filename = $1;
+        }
+        else
+        {
+            $filename = 'upload.faa';
+        }
+        
+        `mkdir $uploadDir`;
+        my $fhIn = $cgi->upload('fastafile');
+        my $fullFilename = "$uploadDir/$filename";
+        if(open(UPLOADFILE, '>', $fullFilename))
+        {
+            binmode UPLOADFILE;
+            while (<$fhIn>) 
+            { 
+                print UPLOADFILE;
+            } 
+            close UPLOADFILE;
+        }
+        
+        $sequences = '';
+        if(open(my $fp, '<', $fullFilename))
+        {
+            while(<$fp>)
+            {
+                $sequences .= $_;
+            }
+            close($fp);
+        }
+        unlink $uploadDir;
+    }
+
+    return($sequences);
 }
