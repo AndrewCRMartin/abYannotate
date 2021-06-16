@@ -13,6 +13,7 @@ use config;
 my $configFile = "$FindBin::Bin" . "/config.cfg";
 my %config = config::ReadConfig($configFile);
 $::htmllocation=$config{'htmllocation'};
+$::css = "$::htmllocation/abyannotate.css";
 
 my $htmlPage  = shift @ARGV;
 my $htmlView  = shift @ARGV;
@@ -65,6 +66,7 @@ sub PrintUpdatingHTMLPage
 <html>
   <head>
     <title>abYannotate - please wait...</title>
+    <link rel='stylesheet' href='$::css' />
     <meta http-equiv="refresh" content="10" />
   </head>
   <body>
