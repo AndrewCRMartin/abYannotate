@@ -87,24 +87,9 @@ if(open(my $in, '<', $fastaFile))
             my $labels = '';
 
             ($result, $labels) = Annotate($result, $::cdr);
-            if(defined($::html))
-            {
-                $info = FixHTMLChars($info);
-                print "<h2>$info</h2>\n";
-                if($::label)
-                {
-                    $labels = HTMLizeLabels($labels);
-                    print "<p class='sequence'>$labels</p>\n";
-                }
-                $result = HTMLizeSequence($result);
-                print "<p class='sequence'>$result</p>\n";
-            }
-            else
-            {
-                print "$info\n";
-                print "$labels\n" if(defined($::label));
-                print "$result\n";
-            }
+            print "$info\n";
+            print "$labels\n" if(defined($::label));
+            print "$result\n";
         }
     }
     close($in);
@@ -180,74 +165,3 @@ sub Annotate
     return($output, $labels);
 }
 
-sub HTMLizeSequence
-{
-    my($input) = @_;
-    my $output = '';
-    my $inCDR  = 0;
-
-    return($input) if($input =~ /^#/);
-    
-    my @chars = split(//, $input);
-    foreach my $char (@chars)
-    {
-        if($char eq '{')
-        {
-            $inCDR   = 1;
-        }
-        elsif($char eq '}')
-        {
-            $inCDR   = 0;
-        }
-        else
-        {
-            if($inCDR)
-            {
-                $output .= "<span class='aa cdr$char'>$char</span>";
-            }
-            else
-            {
-                $output .= "<span class='aa fw$char'>$char</span>";
-            }
-        }
-    }
-    return($output);
-}
-
-sub HTMLizeLabels
-{
-    my($input) = @_;
-    my $output = '';
-    my $inCDR  = 0;
-    
-    my @chars = split(//, $input);
-    foreach my $char (@chars)
-    {
-        if($char eq '{')
-        {
-            $inCDR   = 1;
-        }
-        elsif($char eq '}')
-        {
-            $inCDR   = 0;
-        }
-        elsif($char eq ' ')
-        {
-            $output .= "<span class='label'>&nbsp;</span>";
-        }
-        else
-        {
-            $output .= "<span class='label'>$char</span>";
-        }
-    }
-    return($output);
-}
-
-sub FixHTMLChars
-{
-    my($input) = @_;
-    $input =~ s/\&/\&amp;/;
-    $input =~ s/\>/\&gt;/;
-    $input =~ s/\</\&lt;/;
-    return($input);
-}

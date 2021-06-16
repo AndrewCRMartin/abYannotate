@@ -19,24 +19,34 @@ my %config = config::ReadConfig($configFile);
 $::abnum=$config{'abnum'} unless(defined($::abnum));
 
 my $cgi = new CGI;
-print $cgi->header();
-
-# Check that the executables are present
-if(! -x $::abnum)
-{
-    PrintHTML("# Abnum executable not found: $::abnum", 0);
-    exit 1;
-}
-if(! -x "./abyannotate.pl")
-{
-    PrintHTML("# abyannotate Perl script executable not found!", 0);
-    exit 1;
-}
 
 # Obtain parameters from web site
 my $cdrdef    = $cgi->param('cdrdef');
 my $labelcdrs = defined($cgi->param('labelcdrs'))?'-label':'';
 my $pretty    = ($cgi->param('outstyle') eq 'pretty')?1:0;
+my $plain     = defined($cgi->param('plain'));
+
+# Print HTML header
+if($plain)
+{
+    print $cgi->header(-type=>'text/plain');
+}
+else
+{
+    print $cgi->header();
+}
+
+# Check that the executables are present
+if(! -x $::abnum)
+{
+    PrintHTML("# Abnum executable not found: $::abnum", $plain);
+    exit 1;
+}
+if(! -x "./abyannotate.pl")
+{
+    PrintHTML("# abyannotate Perl script executable not found!", $plain);
+    exit 1;
+}
 
 
 # Obtain the sequence data
@@ -45,7 +55,7 @@ my $sequences = GetFileOrPastedSequences($cgi);
 #                                         $cgi->param('fastafile'));
 if($sequences eq '')
 {
-    PrintHTML('# You must specify some sequences or a FASTA file', 0);
+    PrintHTML('# You must specify some sequences or a FASTA file', $plain);
     exit 0;
 }
 
@@ -53,7 +63,7 @@ if($sequences eq '')
 my $fastaFile = WriteFastaFile($sequences);
 if($fastaFile eq '')
 {
-    PrintHTML('# Unable to create FASTA file', 0);
+    PrintHTML('# Unable to create FASTA file', $plain);
     exit 0;
 }
 
@@ -72,15 +82,15 @@ if($pretty)
 {
     $result = ConvertToHTML($result);
 }
-else
+elsif(!$plain)
 {
-    $wrapInPre = 1;
+    $result = "<pre>\n${result}\n</pre>";
 }
-PrintHTML($result, $wrapInPre);
+PrintHTML($result, $plain);
 
 sub PrintHTML
 {
-    my($result, $wrapInPre) = @_;
+    my($result, $plain) = @_;
 
     PrintHTMLHeader();
 
@@ -212,7 +222,7 @@ sub ConvertToHTML
             my $labels = HTMLizeLabels($_);
             $html .= "<p class='sequence'>$labels</p>\n";
         }
-        else
+        elsif(length($_))
         {
             my $annotation = HTMLizeSequence($_);
             $html .= "<p class='sequence'>$annotation</p>\n";
