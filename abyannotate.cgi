@@ -1,5 +1,8 @@
 #!/usr/bin/perl
 
+# For WS access a newline in a FASTA format file may be replaced by a ~
+
+
 use strict;
 use CGI;
 
@@ -9,42 +12,32 @@ use Cwd qw(abs_path);
 use lib abs_path("$FindBin::Bin/lib");
 use CGI::Carp qw ( fatalsToBrowser );
 
-
+# Read the config file
 use config;
-
 my $configFile = "$FindBin::Bin" . "/config.cfg";
-
 my %config = config::ReadConfig($configFile);
-
 $::abnum=$config{'abnum'} unless(defined($::abnum));
 
-my $cgi = new CGI;
-
 # Obtain parameters from web site
-my $cdrdef    = $cgi->param('cdrdef');
+my $cgi       = new CGI;
+my $cdrdef    = defined($cgi->param('cdrdef'))?$cgi->param('cdrdef'):'kabat';
 my $labelcdrs = defined($cgi->param('labelcdrs'))?'-label':'';
 my $pretty    = ($cgi->param('outstyle') eq 'pretty')?1:0;
 my $plain     = defined($cgi->param('plain'));
+$pretty = 0 if($plain);
 
-# Print HTML header
-if($plain)
-{
-    print $cgi->header(-type=>'text/plain');
-}
-else
-{
-    print $cgi->header();
-}
+# Print HTTP header
+PrintHTTPHeader($cgi, $plain);
 
 # Check that the executables are present
 if(! -x $::abnum)
 {
-    PrintHTML("# Abnum executable not found: $::abnum", $plain);
+    PrintHTML("Error: Abnum executable not found: $::abnum", $plain, 1);
     exit 1;
 }
 if(! -x "./abyannotate.pl")
 {
-    PrintHTML("# abyannotate Perl script executable not found!", $plain);
+    PrintHTML("Error: abyannotate Perl script executable not found!", $plain, 1);
     exit 1;
 }
 
@@ -55,15 +48,15 @@ my $sequences = GetFileOrPastedSequences($cgi);
 #                                         $cgi->param('fastafile'));
 if($sequences eq '')
 {
-    PrintHTML('# You must specify some sequences or a FASTA file', $plain);
+    PrintHTML('Error: You must specify some sequences or a FASTA file', $plain, 1);
     exit 0;
 }
 
 # Write it to a FASTA file
-my $fastaFile = WriteFastaFile($sequences);
+my $fastaFile = WriteFastaFile($sequences, $plain);
 if($fastaFile eq '')
 {
-    PrintHTML('# Unable to create FASTA file', $plain);
+    PrintHTML('Error: Unable to create FASTA file', $plain, 1);
     exit 0;
 }
 
@@ -75,7 +68,8 @@ my $exe = "./abyannotate.pl $labelcdrs -cdr=$cdrdef -abnum=$::abnum $fastaFile";
 my $result    = `cat $rawFile`;
 
 # Remove the temporary FASTA file
-unlink $fastaFile;
+print STDERR "FASTA:\n$fastaFile\n";
+#unlink $fastaFile;
 
 my $wrapInPre = 0;
 if($pretty)
@@ -86,32 +80,42 @@ elsif(!$plain)
 {
     $result = "<pre>\n${result}\n</pre>";
 }
-PrintHTML($result, $plain);
+PrintHTML($result, $plain, 0);
 
 sub PrintHTML
 {
-    my($result, $plain) = @_;
+    my($result, $plain, $isError) = @_;
 
-    PrintHTMLHeader();
+    if(!$plain)
+    {
+        PrintHTMLHeader();
+        print "<div>\n";
+    }
 
     if($result eq '')
     {
-        print "# Error: processing failed\n";
+        print "<p>Error: processing failed</p>\n";
+    }
+    elsif($isError)
+    {
+        $result = "<p class='error'>$result</p>" if(!$plain);
+        print "$result\n";
     }
     else
     {
-        if($wrapInPre)
-        {
-            print "<pre>\n";
-            print $result;
-            print "</pre>\n";
-        }
-        else
-        {
-            print $result;
-        }
+        print "$result\n";
     }
 
+    if(!$plain)
+    {
+        print "</div>\n";
+        PrintHTMLFooter();
+    }
+
+}
+
+sub PrintHTMLFooter
+{
     print <<__EOF;
   </body>
 </html>
@@ -137,12 +141,24 @@ __EOF
 
 sub WriteFastaFile
 {
-    my($sequences) = @_;
+    my($sequences, $plain) = @_;
     my $tFile = "/var/tmp/abyannotate_" . $$ . time() . ".faa";
     if(open(my $fp, '>', $tFile))
     {
         $sequences =~ s/\r//g;
-        print $fp $sequences;
+        if($plain)
+        {
+            my @data = split(/[\~\n]/, $sequences);
+            foreach my $datum (@data)
+            {
+                print STDERR ">> $datum\n";   #HERE
+                print $fp "$datum\n";
+            }
+        }
+        else
+        {
+            print $fp $sequences;
+        }
         close $fp;
         return($tFile);
     }
@@ -301,4 +317,17 @@ sub FixHTMLChars
     $input =~ s/\>/\&gt;/;
     $input =~ s/\</\&lt;/;
     return($input);
+}
+
+sub PrintHTTPHeader
+{
+    my($cgi, $plain) = @_;
+    if($plain)
+    {
+        print $cgi->header(-type=>'text/plain');
+    }
+    else
+    {
+        print $cgi->header();
+    }
 }
