@@ -9,7 +9,7 @@
   <body>
     <h1>Antibody sequence bulk annotation</h1>
 
-    <form method='post' action='./abyannotate.cgi' enctype='multipart/form-data'>
+    <form method='post' action='./monitor.cgi' enctype='multipart/form-data'>
       <p>Enter your sequence data in FASTA format...</p>
       <textarea cols='80' rows='20' name='sequences'></textarea>
 
@@ -39,7 +39,7 @@
                />Plain
         <br />
         <input type='checkbox' name='labelcdrs' value='1'
-               />Label CDRs
+               checked='checked' />Label CDRs
 
       </p>
       <p>

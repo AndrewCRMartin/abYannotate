@@ -17,48 +17,52 @@ use config;
 my $configFile = "$FindBin::Bin" . "/config.cfg";
 my %config = config::ReadConfig($configFile);
 $::abnum=$config{'abnum'} unless(defined($::abnum));
-$::css=$config{'htmllocation'} . "/abyannotate.css";
 
-# Obtain parameters from command line
-my $htmlPage  = shift @ARGV;
-my $htmlView  = shift @ARGV;
-my $textPage  = shift @ARGV;
-my $cdrdef    = shift @ARGV;
-my $labelcdrs = shift @ARGV;
-my $pretty    = shift @ARGV;
-my $plain     = shift @ARGV;
-my $sequences = shift @ARGV;
+# Obtain parameters from web site
+my $cgi       = new CGI;
+my $cdrdef    = defined($cgi->param('cdrdef'))?$cgi->param('cdrdef'):'kabat';
+my $labelcdrs = defined($cgi->param('labelcdrs'))?'-label':'';
+my $pretty    = ($cgi->param('outstyle') eq 'pretty')?1:0;
+my $plain     = defined($cgi->param('plain'));
+$pretty       = 0 if($plain);
 
-if(1)
+# Print HTTP header
+PrintHTTPHeader($cgi, $plain);
+
+# Check that the executables are present
+if(! -x $::abnum)
 {
-    if(open(my $fp, '>>', '/var/www/html/tmp/errors.log'))
-    {
-        print $fp localtime(time()) . " (ABYANNOTATE.CGI)\n";
-        print $fp "htmlPage  : $htmlPage  \n";
-        print $fp "htmlView  : $htmlView  \n";
-        print $fp "textPage  : $textPage  \n";
-        print $fp "cdrdef    : $cdrdef    \n";
-        print $fp "labelcdrs : $labelcdrs \n";
-        print $fp "pretty    : $pretty    \n";
-        print $fp "plain     : $plain     \n";
-#        print $fp "sequences : $sequences \n";
-        close $fp;
-    }
+    PrintHTML("Error: Abnum executable not found: $::abnum", $plain, 1, '');
+    exit 1;
+}
+if(! -x "./abyannotate.pl")
+{
+    PrintHTML("Error: abyannotate Perl script executable not found!", $plain, 1, '');
+    exit 1;
 }
 
 
+# Obtain the sequence data
+my $sequences = GetFileOrPastedSequences($cgi);
+#my $sequences = GetFileOrPastedSequences($cgi->param('sequences'),
+#                                         $cgi->param('fastafile'));
+if($sequences eq '')
+{
+    PrintHTML('Error: You must specify some sequences or a FASTA file', $plain, 1, '');
+    exit 0;
+}
 
 # Write it to a FASTA file
 my $fastaFile = WriteFastaFile($sequences, $plain);
 if($fastaFile eq '')
 {
-    PrintHTML($htmlPage, 'Error: Unable to create FASTA file', $plain, 1, '');
+    PrintHTML('Error: Unable to create FASTA file', $plain, 1, '');
     exit 0;
 }
 
 # Run abyannotate to analyze the data and place results in the web tmp
 # directory
-my $rawFile   = $textPage;
+my $rawFile   = $config{'webtmp'} . "/" . $$ . time() . ".txt";
 my $exe = "./abyannotate.pl $labelcdrs -cdr=$cdrdef -abnum=$::abnum $fastaFile";
 `$exe > $rawFile`;
 my $result    = `cat $rawFile`;
@@ -75,54 +79,50 @@ elsif(!$plain)
 {
     $result = "<pre>\n${result}\n</pre>";
 }
-PrintHTML($htmlPage, $result, $plain, 0, $rawFile);
+PrintHTML($result, $plain, 0, $rawFile);
 
 sub PrintHTML
 {
-    my($htmlPage, $result, $plain, $isError, $rawFile) = @_;
+    my($result, $plain, $isError, $rawFile) = @_;
 
-    if(open(my $fp, '>', $htmlPage))
+    if(!$plain)
     {
-        if(!$plain)
-        {
-            PrintHTMLHeader($fp);
+        PrintHTMLHeader();
 
-            if($rawFile ne '')
-            {
-                $rawFile =~ s/^.*\///;
-                print $fp "<div><a class='btn' download='$rawFile' href='/tmp/$rawFile'>Download</a></div>\n";
-            }
-            
-            print $fp "<div>\n";
+        if($rawFile ne '')
+        {
+            $rawFile =~ s/^.*\///;
+            print "<div><a class='btn' download='$rawFile' href='/tmp/$rawFile'>Download</a></div>\n";
         }
 
-        if($result eq '')
-        {
-            print $fp "<p>Error: processing failed</p>\n";
-        }
-        elsif($isError)
-        {
-            $result = "<p class='error'>$result</p>" if(!$plain);
-            print $fp "$result\n";
-        }
-        else
-        {
-            print $fp "$result\n";
-        }
-        
-        if(!$plain)
-        {
-            print $fp "</div>\n";
-            PrintHTMLFooter($fp);
-        }
+        print "<div>\n";
+    }
+
+    if($result eq '')
+    {
+        print "<p>Error: processing failed</p>\n";
+    }
+    elsif($isError)
+    {
+        $result = "<p class='error'>$result</p>" if(!$plain);
+        print "$result\n";
+    }
+    else
+    {
+        print "$result\n";
+    }
+
+    if(!$plain)
+    {
+        print "</div>\n";
+        PrintHTMLFooter();
     }
 
 }
 
 sub PrintHTMLFooter
 {
-    my($fp) = @_;
-    print $fp <<__EOF;
+    print <<__EOF;
   </body>
 </html>
 __EOF
@@ -131,14 +131,13 @@ __EOF
 
 sub PrintHTMLHeader
 {
-    my($fp) = @_;
-    print $fp <<__EOF;
+    print <<__EOF;
 <html>
   <head>
     <title>
       Antibody sequence bulk annotation
     </title>
-    <link rel='stylesheet' href='$::css' />
+    <link rel='stylesheet' href='abyannotate.css' />
   </head>
 
   <body>
@@ -171,6 +170,59 @@ sub WriteFastaFile
     }
     return('');
 }
+
+sub GetFileOrPastedSequences
+{
+    my($cgi) = @_;
+    my $sequences = $cgi->param('sequences');
+    my $filename  = $cgi->param('fastafile');
+    
+    if($filename ne '')
+    {
+        $CGI::POST_MAX = 1024 * 5000;
+        my $uploadDir = "/tmp/abyannotate_" . $$ . time();
+
+        my $safeFilenameCharacters = "a-zA-Z0-9_.-";
+        $filename =~ s/.*\///;
+        $filename =~ tr/ /_/;
+        $filename =~ s/[^$safeFilenameCharacters]//g;
+        if ( $filename =~ /^([$safeFilenameCharacters]+)$/ )
+        {
+            $filename = $1;
+        }
+        else
+        {
+            $filename = 'upload.faa';
+        }
+        
+        `mkdir $uploadDir`;
+        my $fhIn = $cgi->upload('fastafile');
+        my $fullFilename = "$uploadDir/$filename";
+        if(open(UPLOADFILE, '>', $fullFilename))
+        {
+            binmode UPLOADFILE;
+            while (<$fhIn>) 
+            { 
+                print UPLOADFILE;
+            } 
+            close UPLOADFILE;
+        }
+        
+        $sequences = '';
+        if(open(my $fp, '<', $fullFilename))
+        {
+            while(<$fp>)
+            {
+                $sequences .= $_;
+            }
+            close($fp);
+        }
+        unlink $uploadDir;
+    }
+
+    return($sequences);
+}
+
 
 sub ConvertToHTML
 {
