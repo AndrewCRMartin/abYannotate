@@ -20,6 +20,8 @@ $::abnum=$config{'abnum'} unless(defined($::abnum));
 
 my $cgi = new CGI;
 print $cgi->header();
+
+# Check that the executables are present
 if(! -x $::abnum)
 {
     PrintHTML("# Abnum executable not found: $::abnum", 0);
@@ -31,35 +33,39 @@ if(! -x "./abyannotate.pl")
     exit 1;
 }
 
+# Obtain parameters from web site
 my $cdrdef    = $cgi->param('cdrdef');
 my $labelcdrs = defined($cgi->param('labelcdrs'))?'-label':'';
 my $html      = ($cgi->param('outstyle') eq 'html')?'-html':'';
 
-#my $uploadDir = "/home/public/abyannotate_" . $$ . time();
-my $uploadDir = "/tmp/abyannotate_" . $$ . time();
 
-my $sequences = GetFileOrPastedSequences($cgi->param('sequences'),
-                                         $cgi->param('fastafile'));
+# Obtain the sequence data
+my $sequences = GetFileOrPastedSequences($cgi);
+#my $sequences = GetFileOrPastedSequences($cgi->param('sequences'),
+#                                         $cgi->param('fastafile'));
 if($sequences eq '')
 {
     PrintHTML('# You must specify some sequences or a FASTA file', 0);
     exit 0;
 }
 
-
+# Write it to a FASTA file
 my $fastaFile = WriteFastaFile($sequences);
-my $result    = '';
-if($fastaFile ne '')
+if($fastaFile eq '')
 {
-    my $exe = "./abyannotate.pl $html $labelcdrs -cdr=$cdrdef -abnum=$::abnum $fastaFile";
-    $result = `$exe`;
-    unlink $fastaFile;
-}
-else
-{
-    PrintHTML('# Unable to create temp file', 0);
+    PrintHTML('# Unable to create FASTA file', 0);
     exit 0;
 }
+
+# Run abyannotate to analyze the data and place results in the web tmp
+# directory
+my $rawFile   = $config{'webtmp'} . "/" . $$ . time() . ".txt";
+my $exe = "./abyannotate.pl $labelcdrs -cdr=$cdrdef -abnum=$::abnum $fastaFile";
+`$exe > $rawFile`;
+my $result    = `cat $rawFile`;
+
+# Remove the temporary FASTA file
+unlink $fastaFile;
 
 
 my $wrapInPre = ($html eq '-html')?0:1;
@@ -128,11 +134,15 @@ sub WriteFastaFile
 
 sub GetFileOrPastedSequences
 {
-    my($sequences, $filename) = @_;
+    my($cgi) = @_;
+    my $sequences = $cgi->param('sequences');
+    my $filename  = $cgi->param('fastafile');
     
     if($filename ne '')
     {
         $CGI::POST_MAX = 1024 * 5000;
+        my $uploadDir = "/tmp/abyannotate_" . $$ . time();
+
         my $safeFilenameCharacters = "a-zA-Z0-9_.-";
         $filename =~ s/.*\///;
         $filename =~ tr/ /_/;
