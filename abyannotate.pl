@@ -24,7 +24,7 @@ if(! -x $::abnum)
     exit 1;
 }
 
-$::abnum .= ' -f';
+$::abnum .= ' -f -c';
 $::cdr='kabat' unless(defined($::cdr));
 
 $::cdrdef{'kabat'}{'L1'}{'start'} = 'L24';
@@ -65,6 +65,19 @@ $::cdrdef{'combined'}{'H2'}{'start'} = 'H50';
 $::cdrdef{'combined'}{'H2'}{'stop'}  = 'H65';
 $::cdrdef{'combined'}{'H3'}{'start'} = 'H95';
 $::cdrdef{'combined'}{'H3'}{'stop'}  = 'H102';
+
+$::cdrdef{'imgt'}{'L1'}{'start'} = 'L27';
+$::cdrdef{'imgt'}{'L1'}{'stop'}  = 'L32';
+$::cdrdef{'imgt'}{'L2'}{'start'} = 'L50';
+$::cdrdef{'imgt'}{'L2'}{'stop'}  = 'L52';
+$::cdrdef{'imgt'}{'L3'}{'start'} = 'L89';
+$::cdrdef{'imgt'}{'L3'}{'stop'}  = 'L97';
+$::cdrdef{'imgt'}{'H1'}{'start'} = 'H26';
+$::cdrdef{'imgt'}{'H1'}{'stop'}  = 'H33';
+$::cdrdef{'imgt'}{'H2'}{'start'} = 'H51';
+$::cdrdef{'imgt'}{'H2'}{'stop'}  = 'H56';
+$::cdrdef{'imgt'}{'H3'}{'start'} = 'H93';
+$::cdrdef{'imgt'}{'H3'}{'stop'}  = 'H102';
 
 
 
