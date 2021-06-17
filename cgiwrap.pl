@@ -22,8 +22,7 @@ my $cdrdef    = shift @ARGV;
 my $labelcdrs = shift @ARGV;
 my $pretty    = shift @ARGV;
 my $plain     = shift @ARGV;
-my $sequences = shift @ARGV;
-
+my $faaFile   = shift @ARGV;
 
 if(0)
 {
@@ -37,23 +36,21 @@ if(0)
         print $fp "labelcdrs : $labelcdrs \n";
         print $fp "pretty    : $pretty    \n";
         print $fp "plain     : $plain     \n";
-#        print $fp "sequences : $sequences \n";
+        print $fp "sequences : $faaFile   \n";
         close $fp;
     }
 }
 
-
-    
 `touch $textPage`;
 
 PrintUpdatingHTMLPage($htmlPage, $htmlView);
-DoSlowStuff($htmlPage, $htmlView, $textPage, $cdrdef, $labelcdrs, $pretty,$plain, "$sequences");
+DoSlowStuff($htmlPage, $htmlView, $textPage, $cdrdef, $labelcdrs, $pretty,$plain, $faaFile);
 
 sub DoSlowStuff
 {
-    my($htmlPage, $htmlView, $textPage, $cdrdef, $labelcdrs, $pretty, $plain, $sequences) = @_;
+    my($htmlPage, $htmlView, $textPage, $cdrdef, $labelcdrs, $pretty, $plain, $faaFile) = @_;
 
-    `./abyannotate.cgi $htmlPage $htmlView $textPage $cdrdef $labelcdrs $pretty $plain "$sequences"`;
+    `./abyannotate.cgi $htmlPage $htmlView $textPage $cdrdef $labelcdrs $pretty $plain $faaFile`;
 }
 
 sub PrintUpdatingHTMLPage

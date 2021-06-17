@@ -15,11 +15,12 @@ my %config = config::ReadConfig($configFile);
 $::abnum=$config{'abnum'} unless(defined($::abnum));
 $::css=$config{'htmllocation'} . "/abyannotate.css";
 
-
-my $fileStem='abyannotate_' . $$ . time();
-my $htmlView='/tmp/' . $fileStem . '.html';
-my $htmlPage=$config{'webtmp'} . "/${fileStem}.html";
-my $textPage=$config{'webtmp'} . "/${fileStem}.txt";
+# Create filenames
+my $fileStem = 'abyannotate_' . $$ . time();
+my $htmlView = '/tmp/' . $fileStem . '.html';
+my $htmlPage = $config{'webtmp'} . "/${fileStem}.html";
+my $textPage = $config{'webtmp'} . "/${fileStem}.txt";
+my $faaFile  = $config{'webtmp'} . "/${fileStem}.faa";
 
 # Obtain parameters from web site
 my $cgi       = new CGI;
@@ -28,7 +29,6 @@ my $labelcdrs = defined($cgi->param('labelcdrs'))?'-label':'';
 my $pretty    = ($cgi->param('outstyle') eq 'pretty')?1:0;
 my $plain     = (defined($cgi->param('plain')))?1:0;
 $pretty       = 0 if($plain);
-
 
 # Check that the executables are present
 if(! -x $::abnum)
@@ -42,17 +42,14 @@ if(! -x "./abyannotate.pl")
     exit 1;
 }
 
-
 # Obtain the sequence data
-my $sequences = GetFileOrPastedSequences($cgi);
-if($sequences eq '')
+if(!GetFileOrPastedSequences($cgi, $faaFile))
 {
     PrintHTMLError('Error: You must specify some sequences or a FASTA file');
     exit 0;
 }
 
-
-RunSlowProgram($htmlPage, $htmlView, $textPage, $cdrdef, $labelcdrs, $pretty, $plain, $sequences);
+RunSlowProgram($htmlPage, $htmlView, $textPage, $cdrdef, $labelcdrs, $pretty, $plain, $faaFile);
 
 my $page= '';
 if(-e $htmlPage)
@@ -91,7 +88,7 @@ __EOF
 
 sub RunSlowProgram
 {
-    my ($htmlPage, $htmlView, $textPage, $cdrdef, $labelcdrs, $pretty, $plain, $sequences) = @_;
+    my ($htmlPage, $htmlView, $textPage, $cdrdef, $labelcdrs, $pretty, $plain, $faaFile) = @_;
 
     if(0)
     {
@@ -105,7 +102,7 @@ sub RunSlowProgram
             print $fp "labelcdrs : $labelcdrs \n";
             print $fp "pretty    : $pretty    \n";
             print $fp "plain     : $plain     \n";
-            #        print $fp "sequences : $sequences \n";
+            print $fp "sequences : $faaFile   \n";
             close $fp;
         }
     }
@@ -113,7 +110,7 @@ sub RunSlowProgram
     unlink $textPage;
     unlink $htmlPage;
     sleep 1 while(-e $htmlPage);
-    `nohup ./cgiwrap.pl $htmlPage $htmlView $textPage $cdrdef $labelcdrs $pretty $plain "$sequences" &> /dev/null &`;
+    `nohup ./cgiwrap.pl $htmlPage $htmlView $textPage $cdrdef $labelcdrs $pretty $plain $faaFile &> /dev/null &`;
     sleep 1 while(! -e $htmlPage);
 }
 
@@ -132,32 +129,15 @@ sub PrintHTTPHeader
 
 sub GetFileOrPastedSequences
 {
-    my($cgi) = @_;
+    my($cgi, $faaFile) = @_;
     my $sequences = $cgi->param('sequences');
     my $filename  = $cgi->param('fastafile');
     
     if($filename ne '')
     {
-        $CGI::POST_MAX = 1024 * 5000;
-        my $uploadDir = "/tmp/abyannotate_" . $$ . time();
-
-        my $safeFilenameCharacters = "a-zA-Z0-9_.-";
-        $filename =~ s/.*\///;
-        $filename =~ tr/ /_/;
-        $filename =~ s/[^$safeFilenameCharacters]//g;
-        if ( $filename =~ /^([$safeFilenameCharacters]+)$/ )
-        {
-            $filename = $1;
-        }
-        else
-        {
-            $filename = 'upload.faa';
-        }
-        
-        `mkdir $uploadDir`;
+#        $CGI::POST_MAX = 1024 * 5000;
         my $fhIn = $cgi->upload('fastafile');
-        my $fullFilename = "$uploadDir/$filename";
-        if(open(UPLOADFILE, '>', $fullFilename))
+        if(open(UPLOADFILE, '>', $faaFile))
         {
             binmode UPLOADFILE;
             while (<$fhIn>) 
@@ -166,20 +146,16 @@ sub GetFileOrPastedSequences
             } 
             close UPLOADFILE;
         }
-        
-        $sequences = '';
-        if(open(my $fp, '<', $fullFilename))
+        else
         {
-            while(<$fp>)
-            {
-                $sequences .= $_;
-            }
-            close($fp);
+            PrintHTMLError("Unable to write uploaded FASTA file");
+            exit 1;
         }
-        unlink $uploadDir;
+
+        return(1);
     }
 
-    return($sequences);
+    return(0);
 }
 
 

@@ -26,7 +26,7 @@ my $cdrdef    = shift @ARGV;
 my $labelcdrs = shift @ARGV;
 my $pretty    = shift @ARGV;
 my $plain     = shift @ARGV;
-my $sequences = shift @ARGV;
+my $faaFile   = shift @ARGV;
 
 if(0)
 {
@@ -40,7 +40,7 @@ if(0)
         print $fp "labelcdrs : $labelcdrs \n";
         print $fp "pretty    : $pretty    \n";
         print $fp "plain     : $plain     \n";
-#        print $fp "sequences : $sequences \n";
+        print $fp "sequences : $faaFile   \n";
         close $fp;
     }
 }
@@ -48,22 +48,22 @@ if(0)
 
 
 # Write it to a FASTA file
-my $fastaFile = WriteFastaFile($sequences, $plain);
-if($fastaFile eq '')
-{
-    PrintHTML($htmlPage, 'Error: Unable to create FASTA file', $plain, 1, '');
-    exit 0;
-}
+#my $faaFile = WriteFastaFile($sequences, $plain);
+#if($faaFile eq '')
+#{
+#    PrintHTML($htmlPage, 'Error: Unable to create FASTA file', $plain, 1, '');
+#    exit 0;
+#}
 
 # Run abyannotate to analyze the data and place results in the web tmp
 # directory
 my $rawFile   = $textPage;
-my $exe = "./abyannotate.pl $labelcdrs -cdr=$cdrdef -abnum=$::abnum $fastaFile";
+my $exe = "./abyannotate.pl $labelcdrs -cdr=$cdrdef -abnum=$::abnum $faaFile";
 `$exe > $rawFile`;
 my $result    = `cat $rawFile`;
 
 # Remove the temporary FASTA file
-unlink $fastaFile;
+#unlink $fastaFile;
 
 my $wrapInPre = 0;
 if($pretty)
@@ -145,31 +145,31 @@ sub PrintHTMLHeader
 __EOF
 }
 
-sub WriteFastaFile
-{
-    my($sequences, $plain) = @_;
-    my $tFile = "/var/tmp/abyannotate_" . $$ . time() . ".faa";
-    if(open(my $fp, '>', $tFile))
-    {
-        $sequences =~ s/\r//g;
-        if($plain)
-        {
-            my @data = split(/[\~\n]/, $sequences);
-            foreach my $datum (@data)
-            {
-                print STDERR ">> $datum\n";   #HERE
-                print $fp "$datum\n";
-            }
-        }
-        else
-        {
-            print $fp $sequences;
-        }
-        close $fp;
-        return($tFile);
-    }
-    return('');
-}
+#sub WriteFastaFile
+#{
+#    my($sequences, $plain) = @_;
+#    my $tFile = "/var/tmp/abyannotate_" . $$ . time() . ".faa";
+#    if(open(my $fp, '>', $tFile))
+#    {
+#        $sequences =~ s/\r//g;
+#        if($plain)
+#        {
+#            my @data = split(/[\~\n]/, $sequences);
+#            foreach my $datum (@data)
+#            {
+#                print STDERR ">> $datum\n";   #HERE
+#                print $fp "$datum\n";
+#            }
+#        }
+#        else
+#        {
+#            print $fp $sequences;
+#        }
+#        close $fp;
+#        return($tFile);
+#    }
+#    return('');
+#}
 
 sub ConvertToHTML
 {
