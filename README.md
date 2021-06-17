@@ -14,9 +14,9 @@ It can be used from the command line (create a config file
 Install the software and web interface by creating the config file and
 typing:
 ```
-./install.sh _destination_
+./install.sh destination
 ```
-where `_destination_` is the web directory in which you wish to place
+where `destination` is the web directory in which you wish to place
 the software.
 
 Web code structure
