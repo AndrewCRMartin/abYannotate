@@ -1,5 +1,57 @@
 #!/usr/bin/perl -s
-
+#*************************************************************************
+#
+#   Program:    abyannotate
+#   File:       abyannotate.pl
+#   
+#   Version:    V1.0
+#   Date:       17.06.21
+#   Function:   Annotate CDRs in FASTA sequences
+#   
+#   Copyright:  (c) Prof. Andrew C. R. Martin, UCL, 2021
+#   Author:     Prof. Andrew C. R. Martin
+#   Address:    Institute of Structural and Molecular Biology
+#               Division of Biosciences
+#               University College
+#               Gower Street
+#               London
+#               WC1E 6BT
+#   EMail:      andrew@bioinf.org.uk
+#               
+#*************************************************************************
+#
+#   This program is not in the public domain, but it may be copied
+#   according to the conditions laid out in the accompanying file
+#   LICENSE
+#
+#   The code may be modified as required, but any modifications must be
+#   documented so that the person responsible can be identified. If 
+#   someone else breaks this code, I don't want to be blamed for code 
+#   that does not work! 
+#
+#   The code may not be sold commercially or included as part of a 
+#   commercial product except as described in the file LICENSE.
+#
+#*************************************************************************
+#
+#   Description:
+#   ============
+#   abyannotate makes use of abnum (or some other antibody numbering
+#   program able to generate Chothia numbering) to annotate CDRs with
+#   curly brackets around them.
+#
+#*************************************************************************
+#
+#   Usage:
+#   ======
+#
+#*************************************************************************
+#
+#   Revision History:
+#   =================
+#   V1.0   17.06.21   Original   By: ACRM
+#
+#*************************************************************************
 use strict;
 
 # Add the path of the executable to the library path
@@ -17,6 +69,8 @@ my $configFile = "$FindBin::Bin" . "/config.cfg";
 my %config = config::ReadConfig($configFile);
 
 $::abnum=$config{'abnum'} unless(defined($::abnum));
+
+UsageDie() if(defined($::h));
 
 if(! -x $::abnum)
 {
@@ -79,8 +133,7 @@ $::cdrdef{'imgt'}{'H2'}{'stop'}  = 'H56';
 $::cdrdef{'imgt'}{'H3'}{'start'} = 'H93';
 $::cdrdef{'imgt'}{'H3'}{'stop'}  = 'H102';
 
-
-
+#*************************************************************************
 my $fastaFile = shift @ARGV;
 my $tFile = "/tmp/abannotate_" . $$ . time();
 
@@ -110,6 +163,7 @@ if(open(my $in, '<', $fastaFile))
 }
 
 
+#*************************************************************************
 sub Annotate
 {
     my($input, $cdr) = @_;
@@ -176,5 +230,32 @@ sub Annotate
         }
     }
     return($output, $labels);
+}
+
+#*************************************************************************
+sub UsageDie
+{
+    print <<__EOF;
+
+abyannotate V1.0 (c) 2021, UCL, Prof Andrew C.R. Martin
+
+Usage: abyannotate [-h][-cdr=cdrdef][-abnum=abnumexe] [seqs.faa]
+          -h              This help message
+          -cdr=cdrdef     CDR definition to use [default: Kabat]
+                          Must be one of 'kabat', 'chothia', 'combined'
+                          or 'imgt'
+          -abnum=abnumexe Specify the abnum executable
+                          [$::abnum]
+
+Input is from standard input if the seqs.faa file is not specified.
+
+abYannotate is a simple program to identify the CDRs in a (set of)
+antibody sequences in FASTA format. These can be the Kabat, Chothia,
+Combined (Kabat+Chothia), or IMGT definitions. It applies Chothia
+numbering using abnum and then identifies the required CDR regions.
+
+__EOF
+
+    exit 0;
 }
 

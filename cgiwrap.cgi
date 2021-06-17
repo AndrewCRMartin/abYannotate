@@ -1,4 +1,54 @@
 #!/usr/bin/perl
+#*************************************************************************
+#
+#   Program:    abYannotate web interface
+#   File:       cgiwrap.pl
+#   
+#   Version:    V1.0
+#   Date:       17.06.21
+#   Function:   
+#   
+#   Copyright:  (c) Prof. Andrew C. R. Martin, UCL, 2021
+#   Author:     Prof. Andrew C. R. Martin
+#   Address:    Institute of Structural and Molecular Biology
+#               Division of Biosciences
+#               University College
+#               Gower Street
+#               London
+#               WC1E 6BT
+#   EMail:      andrew@bioinf.org.uk
+#               
+#*************************************************************************
+#
+#   This program is not in the public domain, but it may be copied
+#   according to the conditions laid out in the accompanying file
+#   LICENSE
+#
+#   The code may be modified as required, but any modifications must be
+#   documented so that the person responsible can be identified. If 
+#   someone else breaks this code, I don't want to be blamed for code 
+#   that does not work! 
+#
+#   The code may not be sold commercially or included as part of a 
+#   commercial product except as described in the file LICENSE
+#
+#*************************************************************************
+#
+#   Description:
+#   ============
+#
+#*************************************************************************
+#
+#   Usage:
+#   ======
+#
+#*************************************************************************
+#
+#   Revision History:
+#   =================
+#   V1.0   17.06.21  Original   By: ACRM
+#
+#*************************************************************************
 use strict;
 use CGI;
 
@@ -49,6 +99,7 @@ my $timeEstimate = int(0.5 + ($nSeqs * $config{'timeperseq'}));
 PrintUpdatingHTMLPage($htmlPage, $htmlView, $nSeqs, $timeEstimate);
 DoSlowStuff($htmlPage, $htmlView, $textPage, $cdrdef, $labelcdrs, $pretty,$plain, $faaFile);
 
+#*************************************************************************
 sub DoSlowStuff
 {
     my($htmlPage, $htmlView, $textPage, $cdrdef, $labelcdrs, $pretty, $plain, $faaFile) = @_;
@@ -56,6 +107,7 @@ sub DoSlowStuff
     `./abyannotate.cgi $htmlPage $htmlView $textPage $cdrdef $labelcdrs $pretty $plain $faaFile`;
 }
 
+#*************************************************************************
 sub PrintUpdatingHTMLPage
 {
     my($htmlPage, $htmlView, $nSeqs, $timeEstimate) = @_;

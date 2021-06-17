@@ -1,7 +1,54 @@
 #!/usr/bin/perl
-
-# For WS access a newline in a FASTA format file may be replaced by a ~
-
+#*************************************************************************
+#
+#   Program:    abYannotate web interface
+#   File:       abyannotate.cgi
+#   
+#   Version:    V1.0
+#   Date:       17.06.21
+#   Function:   
+#   
+#   Copyright:  (c) Prof. Andrew C. R. Martin, UCL, 2021
+#   Author:     Prof. Andrew C. R. Martin
+#   Address:    Institute of Structural and Molecular Biology
+#               Division of Biosciences
+#               University College
+#               Gower Street
+#               London
+#               WC1E 6BT
+#   EMail:      andrew@bioinf.org.uk
+#               
+#*************************************************************************
+#
+#   This program is not in the public domain, but it may be copied
+#   according to the conditions laid out in the accompanying file
+#   LICENSE
+#
+#   The code may be modified as required, but any modifications must be
+#   documented so that the person responsible can be identified. If 
+#   someone else breaks this code, I don't want to be blamed for code 
+#   that does not work! 
+#
+#   The code may not be sold commercially or included as part of a 
+#   commercial product except as described in the file LICENSE
+#
+#*************************************************************************
+#
+#   Description:
+#   ============
+#
+#*************************************************************************
+#
+#   Usage:
+#   ======
+#
+#*************************************************************************
+#
+#   Revision History:
+#   =================
+#   V1.0   17.06.21  Original   By: ACRM
+#
+#*************************************************************************
 use strict;
 use CGI;
 
@@ -45,16 +92,6 @@ if(0)
     }
 }
 
-
-
-# Write it to a FASTA file
-#my $faaFile = WriteFastaFile($sequences, $plain);
-#if($faaFile eq '')
-#{
-#    PrintHTML($htmlPage, 'Error: Unable to create FASTA file', $plain, 1, '');
-#    exit 0;
-#}
-
 # Run abyannotate to analyze the data and place results in the web tmp
 # directory
 my $rawFile   = $textPage;
@@ -76,6 +113,7 @@ elsif(!$plain)
 }
 PrintHTML($htmlPage, $result, $plain, 0, $rawFile);
 
+#*************************************************************************
 sub PrintHTML
 {
     my($htmlPage, $result, $plain, $isError, $rawFile) = @_;
@@ -115,9 +153,9 @@ sub PrintHTML
             PrintHTMLFooter($fp);
         }
     }
-
 }
 
+#*************************************************************************
 sub PrintHTMLFooter
 {
     my($fp) = @_;
@@ -128,6 +166,7 @@ __EOF
 }
 
 
+#*************************************************************************
 sub PrintHTMLHeader
 {
     my($fp) = @_;
@@ -145,32 +184,8 @@ sub PrintHTMLHeader
 __EOF
 }
 
-#sub WriteFastaFile
-#{
-#    my($sequences, $plain) = @_;
-#    my $tFile = "/var/tmp/abyannotate_" . $$ . time() . ".faa";
-#    if(open(my $fp, '>', $tFile))
-#    {
-#        $sequences =~ s/\r//g;
-#        if($plain)
-#        {
-#            my @data = split(/[\~\n]/, $sequences);
-#            foreach my $datum (@data)
-#            {
-#                print STDERR ">> $datum\n";   #HERE
-#                print $fp "$datum\n";
-#            }
-#        }
-#        else
-#        {
-#            print $fp $sequences;
-#        }
-#        close $fp;
-#        return($tFile);
-#    }
-#    return('');
-#}
 
+#*************************************************************************
 sub ConvertToHTML
 {
     my($result) = @_;
@@ -200,6 +215,8 @@ sub ConvertToHTML
     return($html);
 }
 
+
+#*************************************************************************
 sub HTMLizeSequence
 {
     my($input) = @_;
@@ -234,6 +251,7 @@ sub HTMLizeSequence
     return($output);
 }
 
+#*************************************************************************
 sub HTMLizeLabels
 {
     my($input) = @_;
@@ -263,6 +281,7 @@ sub HTMLizeLabels
     return($output);
 }
 
+#*************************************************************************
 sub FixHTMLChars
 {
     my($input) = @_;
@@ -272,15 +291,3 @@ sub FixHTMLChars
     return($input);
 }
 
-sub PrintHTTPHeader
-{
-    my($cgi, $plain) = @_;
-    if($plain)
-    {
-        print $cgi->header(-type=>'text/plain');
-    }
-    else
-    {
-        print $cgi->header();
-    }
-}

@@ -1,4 +1,54 @@
 #!/usr/bin/perl
+#*************************************************************************
+#
+#   Program:    abYannotate web interface
+#   File:       monitor.cgi
+#   
+#   Version:    V1.0
+#   Date:       17.06.21
+#   Function:   
+#   
+#   Copyright:  (c) Prof. Andrew C. R. Martin, UCL, 2020
+#   Author:     Prof. Andrew C. R. Martin
+#   Address:    Institute of Structural and Molecular Biology
+#               Division of Biosciences
+#               University College
+#               Gower Street
+#               London
+#               WC1E 6BT
+#   EMail:      andrew@bioinf.org.uk
+#               
+#*************************************************************************
+#
+#   This program is not in the public domain, but it may be copied
+#   according to the conditions laid out in the accompanying file
+#   LICENSE
+#
+#   The code may be modified as required, but any modifications must be
+#   documented so that the person responsible can be identified. If 
+#   someone else breaks this code, I don't want to be blamed for code 
+#   that does not work! 
+#
+#   The code may not be sold commercially or included as part of a 
+#   commercial product except as described in the file LICENSE
+#
+#*************************************************************************
+#
+#   Description:
+#   ============
+#
+#*************************************************************************
+#
+#   Usage:
+#   ======
+#
+#*************************************************************************
+#
+#   Revision History:
+#   =================
+#   V1.0   17.06.21   Original   By: ACRM
+#
+#*************************************************************************
 use strict;
 use CGI;
 
@@ -33,12 +83,12 @@ $pretty       = 0 if($plain);
 # Check that the executables are present
 if(! -x $::abnum)
 {
-    PrintHTMLError("Error: Abnum executable not found: $::abnum");
+    PrintHTMLError("Abnum executable not found: $::abnum");
     exit 1;
 }
 if(! -x "./abyannotate.pl")
 {
-    PrintHTMLError("Error: abyannotate Perl script executable not found!");
+    PrintHTMLError("abyannotate Perl script executable not found!");
     exit 1;
 }
 
@@ -46,11 +96,12 @@ if(! -x "./abyannotate.pl")
 my $nSeqs = GetFileOrPastedSequences($cgi, $faaFile);
 if(!$nSeqs)
 {
-    PrintHTMLError('Error: You must specify some sequences or a FASTA file');
+    PrintHTMLError('You must specify some sequences or a FASTA file');
     exit 0;
 }
 
-RunSlowProgram($htmlPage, $htmlView, $textPage, $cdrdef, $labelcdrs, $pretty, $plain, $faaFile, $nSeqs);
+RunSlowProgram($htmlPage, $htmlView, $textPage, $cdrdef, $labelcdrs,
+               $pretty, $plain, $faaFile, $nSeqs);
 
 my $page= '';
 if(-e $htmlPage)
@@ -59,13 +110,15 @@ if(-e $htmlPage)
 }
 else
 {
-    PrintHTMLError('Error: no HTML page');
+    PrintHTMLError('No HTML page');
 }
     
 $page    =~ s/\<meta.*?\>/<meta http-equiv='refresh' content="0; URL=$htmlView" \/\>/;
 print $cgi->header();
 print $page;
 
+
+#*************************************************************************
 sub PrintHTMLError
 {
     my($text) = @_;
@@ -81,12 +134,16 @@ sub PrintHTMLError
   </head>
 
   <body>
-    <h1>$text</h1>
+    <h1>Antibody sequence bulk annotation</h1>
+    <h2>Error!</h2>
+    <h3>$text</h3>
   </body>
 </html>
 __EOF
 }
 
+
+#*************************************************************************
 sub RunSlowProgram
 {
     my ($htmlPage, $htmlView, $textPage, $cdrdef, $labelcdrs, $pretty, $plain, $faaFile, $nSeqs) = @_;
@@ -112,23 +169,12 @@ sub RunSlowProgram
     unlink $textPage;
     unlink $htmlPage;
     sleep 1 while(-e $htmlPage);
-    `nohup ./cgiwrap.pl $htmlPage $htmlView $textPage $cdrdef $labelcdrs $pretty $plain $faaFile $nSeqs &> /dev/null &`;
+    `nohup ./cgiwrap.cgi $htmlPage $htmlView $textPage $cdrdef $labelcdrs $pretty $plain $faaFile $nSeqs &> /dev/null &`;
     sleep 1 while(! -e $htmlPage);
 }
 
-sub PrintHTTPHeader
-{
-    my($cgi, $plain) = @_;
-    if($plain)
-    {
-        print $cgi->header(-type=>'text/plain');
-    }
-    else
-    {
-        print $cgi->header();
-    }
-}
 
+#*************************************************************************
 sub GetFileOrPastedSequences
 {
     my($cgi, $faaFile) = @_;
