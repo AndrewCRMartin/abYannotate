@@ -1,13 +1,13 @@
     h1 {font: bold 22pt Helvetica,Arial,sans-serif;
        }
-    h2 {font: bold 14pt Helvetica,Arial,sans-serif;
-        padding: 0pt; margin: 2em 0 0 0;
+    h2 {font: bold 12pt Helvetica,Arial,sans-serif;
+        padding: 0pt; margin: 1em 0 0 0;
        }
-    .sequence {font: bold 11pt Courier,monospaced;
-               padding: 0pt; margin: 0pt;
+    .sequence {font: bold 10pt Courier,monospaced;
+               padding: 0pt; margin: -0.3em 0pt 0pt 0pt;
               }
-    .aa {margin: 0; padding: 4pt 2pt 1pt 2pt;}
-    .label {margin: 0; padding: 0pt 2pt 0pt 2pt;}
+    .aa {margin: 0; padding: 0.1em 0em 0.1em 0em;}
+    .label {margin: 0; padding: 0;}
       /* Residue colour schemes */
     .fwA {background-color: #ffffff; color: #80a0f0;}
     .fwR {background-color: #ffffff; color: #f01505;}

@@ -23,6 +23,7 @@ my $labelcdrs = shift @ARGV;
 my $pretty    = shift @ARGV;
 my $plain     = shift @ARGV;
 my $faaFile   = shift @ARGV;
+my $nSeqs     = shift @ARGV;
 
 if(0)
 {
@@ -37,13 +38,15 @@ if(0)
         print $fp "pretty    : $pretty    \n";
         print $fp "plain     : $plain     \n";
         print $fp "sequences : $faaFile   \n";
+        print $fp "nSeqs     : $nSeqs     \n";
         close $fp;
     }
 }
 
 `touch $textPage`;
 
-PrintUpdatingHTMLPage($htmlPage, $htmlView);
+my $timeEstimate = int(0.5 + ($nSeqs * $config{'timeperseq'}));
+PrintUpdatingHTMLPage($htmlPage, $htmlView, $nSeqs, $timeEstimate);
 DoSlowStuff($htmlPage, $htmlView, $textPage, $cdrdef, $labelcdrs, $pretty,$plain, $faaFile);
 
 sub DoSlowStuff
@@ -55,7 +58,7 @@ sub DoSlowStuff
 
 sub PrintUpdatingHTMLPage
 {
-    my($htmlPage, $htmlView) = @_;
+    my($htmlPage, $htmlView, $nSeqs, $timeEstimate) = @_;
 
     if(open(my $fp, '>', $htmlPage))
     {
@@ -72,6 +75,7 @@ sub PrintUpdatingHTMLPage
     <p>This page will refresh every 10 seconds. Press 
       <a href='$htmlView'>here</a> to force a refresh.
     </p>
+    <p>You uploaded $nSeqs sequences. Estimated total time: $timeEstimate seconds</p>
   </body>
 </html>
 __EOF

@@ -43,13 +43,14 @@ if(! -x "./abyannotate.pl")
 }
 
 # Obtain the sequence data
-if(!GetFileOrPastedSequences($cgi, $faaFile))
+my $nSeqs = GetFileOrPastedSequences($cgi, $faaFile);
+if(!$nSeqs)
 {
     PrintHTMLError('Error: You must specify some sequences or a FASTA file');
     exit 0;
 }
 
-RunSlowProgram($htmlPage, $htmlView, $textPage, $cdrdef, $labelcdrs, $pretty, $plain, $faaFile);
+RunSlowProgram($htmlPage, $htmlView, $textPage, $cdrdef, $labelcdrs, $pretty, $plain, $faaFile, $nSeqs);
 
 my $page= '';
 if(-e $htmlPage)
@@ -88,7 +89,7 @@ __EOF
 
 sub RunSlowProgram
 {
-    my ($htmlPage, $htmlView, $textPage, $cdrdef, $labelcdrs, $pretty, $plain, $faaFile) = @_;
+    my ($htmlPage, $htmlView, $textPage, $cdrdef, $labelcdrs, $pretty, $plain, $faaFile, $nSeqs) = @_;
 
     if(0)
     {
@@ -103,6 +104,7 @@ sub RunSlowProgram
             print $fp "pretty    : $pretty    \n";
             print $fp "plain     : $plain     \n";
             print $fp "sequences : $faaFile   \n";
+            print $fp "nseqs     : $nSeqs     \n";
             close $fp;
         }
     }
@@ -110,7 +112,7 @@ sub RunSlowProgram
     unlink $textPage;
     unlink $htmlPage;
     sleep 1 while(-e $htmlPage);
-    `nohup ./cgiwrap.pl $htmlPage $htmlView $textPage $cdrdef $labelcdrs $pretty $plain $faaFile &> /dev/null &`;
+    `nohup ./cgiwrap.pl $htmlPage $htmlView $textPage $cdrdef $labelcdrs $pretty $plain $faaFile $nSeqs &> /dev/null &`;
     sleep 1 while(! -e $htmlPage);
 }
 
@@ -132,6 +134,7 @@ sub GetFileOrPastedSequences
     my($cgi, $faaFile) = @_;
     my $sequences = $cgi->param('sequences');
     my $filename  = $cgi->param('fastafile');
+    my $nSeqs     = 0;
     
     if($filename ne '')
     {
@@ -141,7 +144,8 @@ sub GetFileOrPastedSequences
         {
             binmode UPLOADFILE;
             while (<$fhIn>) 
-            { 
+            {
+                $nSeqs++ if(/^\>/);
                 print UPLOADFILE;
             } 
             close UPLOADFILE;
@@ -152,7 +156,7 @@ sub GetFileOrPastedSequences
             exit 1;
         }
 
-        return(1);
+        return($nSeqs);
     }
 
     return(0);
